@@ -31,10 +31,24 @@ class Chef
         cmd
       end
 
+      def shell_out_with_systems_locale(command, args={})
+        shell_out command, with_systems_locale(args)
+      end
+
       def shell_out!(*command_args)
-        cmd= shell_out(*command_args)
+        cmd = shell_out(*command_args)
         cmd.error!
         cmd
+      end
+
+      def shell_out_with_systems_locale!(command, args={})
+        shell_out command, with_systems_locale(args)
+      end
+
+      def with_systems_locale(args={})
+        args[:environment] ||= {}
+        args[:environment]["LC_ALL"] = ENV["LC_ALL"]
+        return args
       end
     end
   end
