@@ -44,6 +44,10 @@ require 'chef/applications'
 require 'chef/shef'
 require 'chef/util/file_edit'
 
+# Metaprogramming Tools
+require 'active_support/concern'
+
+# Debug Tools
 require 'ap'
 require 'pry' if ENV['DEBUG']
 
