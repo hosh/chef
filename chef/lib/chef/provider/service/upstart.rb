@@ -25,6 +25,8 @@ class Chef
   class Provider
     class Service
       class Upstart < Chef::Provider::Service::Simple
+        include Chef::Mixin::Command
+
         UPSTART_STATE_FORMAT = /\w+ \(?(\w+)\)?[\/ ](\w+)/
        
         # Upstart does more than start or stop a service, creating multiple 'states' [1] that a service can be in.
@@ -64,10 +66,10 @@ class Chef
             Chef::Log.debug("#{@new_resource} you have specified a status command, running..")
 
             begin
-              if run_command_with_systems_locale(:command => @new_resource.status_command) == 0
+              if shell_out_with_systems_locale!(@new_resource.status_command) == 0
                 @current_resource.running true
               end
-            rescue Chef::Exceptions::Exec
+            rescue Mixlib::ShellOut::ShellCommandFailed
               @current_resource.running false
               nil
             end
@@ -78,7 +80,7 @@ class Chef
               else
                 @current_resource.running false
               end
-            rescue Chef::Exceptions::Exec
+            rescue Mixlib::ShellOut::ShellCommandFailed
               @current_resource.running false
               nil
             end
@@ -118,7 +120,7 @@ class Chef
             if @new_resource.start_command
               super
             else
-              run_command_with_systems_locale(:command => "/sbin/start #{@new_resource.service_name}")
+              shell_out_with_systems_locale!("/sbin/start #{@new_resource.service_name}")
             end
           end
         end
@@ -132,7 +134,7 @@ class Chef
             if @new_resource.stop_command
               super
             else
-              run_command_with_systems_locale(:command => "/sbin/stop #{@new_resource.service_name}")
+              shell_out_with_systems_locale!("/sbin/stop #{@new_resource.service_name}")
             end
           end
         end
@@ -144,7 +146,7 @@ class Chef
           # Older versions of upstart would fail on restart if the service was currently stopped, check for that. LP:430883
           else @new_resource.supports[:restart]
             if @current_resource.running
-              run_command_with_systems_locale(:command => "/sbin/restart #{@new_resource.service_name}")
+              shell_out_with_systems_locale!("/sbin/restart #{@new_resource.service_name}")
             else
               start_service
             end
@@ -156,7 +158,7 @@ class Chef
             super
           else
             # upstart >= 0.6.3-4 supports reload (HUP)
-            run_command_with_systems_locale(:command => "/sbin/reload #{@new_resource.service_name}")
+            shell_out_with_systems_locale!("/sbin/reload #{@new_resource.service_name}")
           end
         end
 
