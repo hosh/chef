@@ -30,3 +30,9 @@ Chef::Log.logger = Logger.new(StringIO.new)
 def sha256_checksum(path)
   Digest::SHA256.hexdigest(File.read(path))
 end
+
+# Debugging Tools
+
+# Example
+#   some_value.tap(&WATCH)
+WATCH=lambda { |x| ap x } unless defined?(WATCH)
