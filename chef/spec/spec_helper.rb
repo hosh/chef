@@ -47,11 +47,9 @@ require 'chef/util/file_edit'
 # Metaprogramming Tools
 require 'active_support/concern'
 
-# Debug Tools
-require 'ap'
-require 'pry' if ENV['DEBUG']
-
-Dir[File.join(File.dirname(__FILE__), 'lib', '**', '*.rb')].sort.each { |lib| require lib }
+# If you want to load anything into the testing environment
+# without versioning it, add it to spec/support/local_gems.rb
+require 'spec/support/local_gems.rb' if File.exists?(File.join(File.dirname(__FILE__), 'support', 'local_gems.rb'))
 
 # Explicitly require spec helpers that need to load first
 require 'spec/support/platform_helpers'
