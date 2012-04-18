@@ -21,6 +21,7 @@ require 'chef/config'
 class Chef
   module Mixin
     module ShellOut
+      extend self
 
       def shell_out(*command_args)
         cmd = Mixlib::ShellOut.new(*command_args)
