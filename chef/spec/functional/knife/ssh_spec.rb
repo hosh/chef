@@ -17,9 +17,9 @@
 #
 
 require 'spec_helper'
-require 'tiny_server'
+require 'tiny_server' unless windows?
 
-describe Chef::Knife::Ssh do
+describe Chef::Knife::Ssh, :unix_only do
 
   before(:all) do
     Chef::Knife::Ssh.load_deps

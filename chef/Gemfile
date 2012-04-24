@@ -6,10 +6,12 @@ gem "dep_selector", :group => :development, :platform => "ruby"
 gem "activesupport", :group => :compat_testing, :platform => "ruby"
 
 group(:development, :test) do
-  gem 'rack'
-  gem 'thin'
-#  gem 'awesome_print'
-#  gem 'pry'
+  # TODO: Rewrite spec/tiny_server.rb to use something cross-platform, perhaps Webrick
+  # Disable this under Windows
+  unless (RUBY_PLATFORM =~ /mswin|mingw|windows/)
+    gem 'rack'
+    gem 'thin'
+  end
 end
 
 platforms :mswin, :mingw do

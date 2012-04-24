@@ -17,9 +17,9 @@
 #
 
 require 'spec_helper'
-require 'tiny_server'
+require 'tiny_server' unless windows?
 
-describe Chef::Knife::Exec do
+describe Chef::Knife::Exec, :unix_only do
   before(:all) do
     Thin::Logging.silent = false
 
