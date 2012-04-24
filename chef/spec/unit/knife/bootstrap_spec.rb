@@ -72,6 +72,15 @@ describe Chef::Knife::Bootstrap do
     @knife.parse_options(["-r", "role[base],recipe[cupcakes]"])
     @knife.render_template(template_string).should == '{"run_list":["role[base]","recipe[cupcakes]"]}'
   end
+  
+  it "should have foo => {bar => baz} in the first_boot" do
+    template_string = @knife.load_template(@knife.config[:template_file])
+    @knife.parse_options(["-j", '{"foo":{"bar":"baz"}}'])
+    expected_hash = Yajl::Parser.new.parse('{"foo":{"bar":"baz"},"run_list":[]}')
+    actual_hash = Yajl::Parser.new.parse(@knife.render_template(template_string))
+    actual_hash.should == expected_hash
+  end
+  
 
   it "should take the node name from ARGV" do
     @knife.name_args = ['barf']
