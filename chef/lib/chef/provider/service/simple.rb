@@ -25,10 +25,14 @@ class Chef
     class Service
       class Simple < Chef::Provider::Service
 
-        let(:start_command) { @new_resource.start_command }
-        let(:stop_command)  { @new_resource.stop_command }
+        let(:start_command)   { @new_resource.start_command }
+        let(:stop_command)    { @new_resource.stop_command }
         let(:restart_command) { @new_resource.restart_command }
-        let(:reload_command) { @new_resource.reload_command }
+        let(:reload_command)  { @new_resource.reload_command }
+        let(:status_command)  { @new_resource.status_command }
+        let(:init_command)    { fail Chef::Exceptions::Override, 'Must declare init_command' }
+
+        let(:supports_status?) { !!@new_resource.supports[:status] }
 
         let(:node) { @run_context.node }
         let(:node_command) { node[:command] }
@@ -102,15 +106,15 @@ class Chef
         end
 
         def status_cmd
-          @_status_command ||= if @new_resource.status_command
-                                 Chef::Log.debug("#{@new_resource} you have specified a status command, running..")
-                                 @new_resource.status_command
-                               elsif @new_resource.supports[:status]
-                                 Chef::Log.debug("#{@new_resource} supports status, running")
-                                 "#{@init_command} status"
-                               else
-                                 nil
-                               end
+          @_status_cmd ||= if status_command
+                             Chef::Log.debug("#{@new_resource} you have specified a status command, running..")
+                             status_command
+                           elsif supports_status?
+                             Chef::Log.debug("#{@new_resource} supports status, running")
+                             "#{init_command} status"
+                           else
+                             nil
+                           end
         end
 
         def exec_ps_cmd!

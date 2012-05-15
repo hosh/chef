@@ -24,22 +24,34 @@ class Chef
   class Provider
     class Service
       class Freebsd < Chef::Provider::Service::Init
-
         include Chef::Mixin::ShellOut
+
+        let(:current_service_name) { current_resource.service_name }
+        let(:init_start)   { "#{init_command} faststart" }
+        let(:init_stop)    { "#{init_command} faststop" }
+        let(:init_restart) { "#{init_command} fastrestart" }
+
+        # Determine if we're talking about /etc/rc.d or /usr/local/etc/rc.d
+        let(:init_command) do
+          if etc_rcd_exists?
+            etc_rcd
+          elsif usr_rcd_exists?
+            usr_rcd
+          else
+            raise Chef::Exceptions::Service, "#{@new_resource}: unable to locate the rc.d script"
+          end
+        end
+
+        let(:etc_rcd_exists?) { ::File.exists? etc_rcd }
+        let(:usr_rcd_exists?) { ::File.exists? usr_rcd }
+        let(:etc_rcd) { "/etc/rc.d/#{current_service_name}" }
+        let(:usr_rcd) { "/usr/local/etc/rc.d/#{current_service_name}" }
 
         def load_current_resource
           @current_resource = Chef::Resource::Service.new(@new_resource.name)
           @current_resource.service_name(@new_resource.service_name)
 
-          # Determine if we're talking about /etc/rc.d or /usr/local/etc/rc.d
-          if ::File.exists?("/etc/rc.d/#{current_resource.service_name}")
-            @init_command = "/etc/rc.d/#{current_resource.service_name}"
-          elsif ::File.exists?("/usr/local/etc/rc.d/#{current_resource.service_name}")
-            @init_command = "/usr/local/etc/rc.d/#{current_resource.service_name}"
-          else
-            raise Chef::Exceptions::Service, "#{@new_resource}: unable to locate the rc.d script"
-          end
-          Chef::Log.debug("#{@current_resource} found at #{@init_command}")
+          Chef::Log.debug("#{@current_resource} found at #{init_command}")
 
           determine_current_status!
 
@@ -62,34 +74,6 @@ class Chef
           @current_resource
         end
 
-        def start_service
-          if @new_resource.start_command
-            super
-          else
-            shell_out!("#{@init_command} faststart")
-          end
-        end
-
-        def stop_service
-          if @new_resource.stop_command
-            super
-          else
-            shell_out!("#{@init_command} faststop")
-          end
-        end
-
-        def restart_service
-          if @new_resource.restart_command
-            super
-          elsif @new_resource.supports[:restart]
-            shell_out!("#{@init_command} fastrestart")
-          else
-            stop_service
-            sleep 1
-            start_service
-          end
-        end
-
         def read_rc_conf
           ::File.open("/etc/rc.conf", 'r') { |file| file.readlines }
         end
@@ -99,7 +83,6 @@ class Chef
             lines.each { |line| file.puts(line) }
           end
         end
-
 
         # The variable name used in /etc/rc.conf for enabling this service
         def service_enable_variable_name

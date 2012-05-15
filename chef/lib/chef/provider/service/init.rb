@@ -26,46 +26,21 @@ class Chef
     class Service
       class Init < Chef::Provider::Service::Simple
 
-        def initialize(new_resource, run_context)
-          super
-          @init_command = "/etc/init.d/#{@new_resource.service_name}"
-        end
+        let(:init_command)  { "/etc/init.d/#{@new_resource.service_name}" }
+        let(:start_command) { @new_resource.start_command || init_start }
+        let(:stop_command)  { @new_resource.stop_command  || init_stop }
 
-        def start_service
-          if @new_resource.start_command
-            super
-          else
-            shell_out!("#{@init_command} start")
-          end
-        end
+        let(:restart_command) { @new_resource.restart_command || ( supports_restart? ? init_restart : nil ) }
+        let(:reload_command)  { @new_resource.reload_command  || ( supports_reload?  ? init_reload : nil ) }
 
-        def stop_service
-          if @new_resource.stop_command
-            super
-          else
-            shell_out!("#{@init_command} stop")
-          end
-        end
+        let(:init_start)   { "#{init_command} start" }
+        let(:init_stop)    { "#{init_command} stop" }
+        let(:init_restart) { "#{init_command} restart" }
+        let(:init_reload)  { "#{init_command} reload" }
 
-        def restart_service
-          if @new_resource.restart_command
-            super
-          elsif @new_resource.supports[:restart]
-            shell_out!("#{@init_command} restart")
-          else
-            stop_service
-            sleep 1
-            start_service
-          end
-        end
+        let(:supports_restart?) { !!@new_resource.supports[:restart] }
+        let(:supports_reload?)  { !!@new_resource.supports[:reload] }
 
-        def reload_service
-          if @new_resource.reload_command
-            super
-          elsif @new_resource.supports[:reload]
-            shell_out!("#{@init_command} reload")
-          end
-        end
       end
     end
   end

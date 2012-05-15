@@ -20,21 +20,15 @@ require 'chef/provider/service/init'
 require 'chef/mixin/command'
 
 class Chef::Provider::Service::Arch < Chef::Provider::Service::Init
-
-  def initialize(new_resource, run_context)
-    super
-    @init_command = "/etc/rc.d/#{@new_resource.service_name}"
-  end
+  let(:init_command) { "/etc/rc.d/#{@new_resource.service_name}" }
 
   def load_current_resource
-
     raise Chef::Exceptions::Service unless ::File.exists?("/etc/rc.conf")
     raise Chef::Exceptions::Service unless ::File.read("/etc/rc.conf").match(/DAEMONS=\((.*)\)/m)
 
     super
 
     @current_resource.enabled(daemons.include?(@current_resource.service_name))
-
     @current_resource
   end
 
