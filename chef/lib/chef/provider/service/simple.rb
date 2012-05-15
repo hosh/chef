@@ -25,6 +25,15 @@ class Chef
     class Service
       class Simple < Chef::Provider::Service
 
+        let(:start_command) { @new_resource.start_command }
+        let(:stop_command)  { @new_resource.stop_command }
+        let(:restart_command) { @new_resource.restart_command }
+        let(:reload_command) { @new_resource.reload_command }
+
+        let(:node) { @run_context.node }
+        let(:node_command) { node[:command] }
+        let(:ps_cmd) { node_command && node_command[:ps] }
+
         def load_current_resource
           @current_resource = Chef::Resource::Service.new(@new_resource.name)
           @current_resource.service_name(@new_resource.service_name)
@@ -35,24 +44,18 @@ class Chef
         end
 
         def start_service
-          if @new_resource.start_command
-            shell_out!(@new_resource.start_command)
-          else
-            raise Chef::Exceptions::Service, "#{self.to_s} requires that start_command to be set"
-          end
+          raise Chef::Exceptions::Service, "#{self.to_s} requires that start_command to be set" unless start_command
+          shell_out!(start_command)
         end
 
         def stop_service
-          if @new_resource.stop_command
-            shell_out!(@new_resource.stop_command)
-          else
-            raise Chef::Exceptions::Service, "#{self.to_s} requires that stop_command to be set"
-          end
+          raise Chef::Exceptions::Service, "#{self.to_s} requires that stop_command to be set" unless stop_command
+          shell_out!(stop_command)
         end
 
         def restart_service
-          if @new_resource.restart_command
-            shell_out!(@new_resource.restart_command)
+          if restart_command
+            shell_out!(restart_command)
           else
             stop_service
             sleep 1
@@ -61,11 +64,8 @@ class Chef
         end
 
         def reload_service
-          if @new_resource.reload_command
-            shell_out!(@new_resource.reload_command)
-          else
-            raise Chef::Exceptions::Service, "#{self.to_s} requires that reload_command to be set"
-          end
+          raise Chef::Exceptions::Service, "#{self.to_s} requires that reload_command to be set" unless reload_command
+          shell_out!(reload_command)
         end
 
       protected
@@ -117,9 +117,6 @@ class Chef
           shell_out!(ps_cmd)
         end
 
-        def ps_cmd
-          @run_context.node[:command] && @run_context.node[:command][:ps]
-        end
       end
     end
   end
