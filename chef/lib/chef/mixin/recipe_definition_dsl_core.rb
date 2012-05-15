@@ -21,6 +21,7 @@ require 'chef/resource'
 require 'chef/resource_platform_map'
 require 'chef/mixin/convert_to_class_name'
 require 'chef/mixin/language'
+require 'chef/mixin/let'
 
 #--
 # UGH. this is a circular require that will cause an uninitialized constant
@@ -31,8 +32,16 @@ class Chef
   module Mixin
     module RecipeDefinitionDSLCore
 
+      include Chef::Mixin::Let
       include Chef::Mixin::ConvertToClassName
       include Chef::Mixin::Language
+
+      # Since we don't have ActiveSupport::Concern, we need this ugly piece of code
+      def self.included(c)
+        c.instance_eval do
+          extend Chef::Mixin::Let::ClassMethods
+        end
+      end
 
       def method_missing(method_symbol, *args, &block)
         # If we have a definition that matches, we want to use that instead.  This should
